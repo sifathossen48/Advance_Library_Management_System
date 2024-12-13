@@ -1,34 +1,42 @@
-import datetime
-
+import json
+from datetime import datetime, timedelta
 import save_all_books
 
 def lend_book(all_books, book_id):
-
-    book_id = str(book_id)
-
     for book in all_books:
         if book['isbn'] == book_id:
             if int(book['quantity']) > 0:
-                # Ask for borrower's information
-                borrower_name = input("Enter borrower's name: ").strip()
-                borrower_phone = input("Enter borrower's phone number: ").strip()
-                return_due_date = input("Enter return due date (YYYY-MM-DD): ").strip()
+                borrower_name = input("Enter borrower's name: ")
+                phone_number = input("Enter borrower's phone number: ")
+                due_date = (datetime.now() + timedelta(days=14)).strftime("%d-%m-%Y")
 
-                # Validate date format
+                lending_info = {
+                    "borrower_name": borrower_name,
+                    "phone_number" : phone_number,
+                    "book_title" : book['title'],
+                    "isbn" : book_id,
+                    "due_date" : due_date
+                }
+
+               
                 try:
-                    return_due_date = datetime.strptime(return_due_date, "%Y-%m-%d").date()
-                except ValueError:
-                    print("Invalid date format.")
-                    return all_books
+                    with open("lending_info.json", "r") as file:
+                        lending_records = json.load(file)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    lending_records = [] 
 
-                # Update book information
-                book['quantity'] = str(int(book['quantity']) - 1)
-                book['borrower_name'] = borrower_name
-                book['borrower_phone'] = borrower_phone
-                book['return_due_date'] = str(return_due_date)
+                lending_records.append(lending_info)
 
-                print(f"Book lent successfully to {borrower_name}. Due back on {return_due_date}.")
-                return all_books
+                # Write the updated lending records back to the file
+                with open("lending_info.json", "w") as file:
+                    json.dump(lending_records, file, indent=4)
 
-    print("Book not found.")
-    return all_books
+                # Decrease the book quantity
+                book['quantity'] = int(book['quantity']) - 1
+                save_all_books.save_all_books(all_books)
+                print(f"Book lent successfully to {borrower_name}. Return by {due_date}.")
+                return
+            else:
+                print("There are not enough books available to lend.")
+                return
+    print("Book not found")

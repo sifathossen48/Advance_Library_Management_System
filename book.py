@@ -5,9 +5,11 @@ import restore_books_file
 from datetime import datetime
 import update_book_file, delete_book_file
 import lend_book
+import load_books
+import return_book
 
 
-all_books = []
+all_books = load_books.load_books()
 
 
 while True:
@@ -18,9 +20,8 @@ while True:
     print("3. Book Update")
     print("4. Book Remove/Delete")
     print("5. Lend a Book")
+    print("6. Return a Book")
 
-
-    all_books = restore_books_file.restore_all_books(all_books)
 
     menu = input("Select any number: ")
     
@@ -30,22 +31,23 @@ while True:
     elif menu == "1":
         all_books = add_books.add_books(all_books)
     elif menu == "2":
-        view_all_books.view_all_books()
+        if not all_books:
+            print("No books available")
+        else:
+            view_all_books.view_all_books()
     elif menu == "3":
         update_book_file.update_books(all_books)
     elif menu == "4":
         delete_book_file.delete_books(all_books)
     elif menu == "5":
         view_all_books.view_all_books()
-        book_id = input('Enter ISBN number of the book you want to lend:').strip()
-        if book_id:
-            view_all_books.view_all_books()
-            book_id = input('Enter ISBN number of the book you want to lend: ')
-            all_books = lend_book.lend_book(all_books, book_id)
-            save_all_books.save_all_books(all_books)
-        else:
-            print("Please enter a valid ISBN number.")
-
+        book_id = int(input('Enter ISBN number of the book you want to lend: '))
+        lend_book.lend_book(all_books,book_id)
+    elif menu =="6":
+        view_all_books.view_all_books()  # Show the list of books
+        book_id = int(input('Enter ISBN number of the book you want to return: '))  # Convert to int
+        borrower_name = input('Enter the name of the borrower: ')
+        return_book.return_book(all_books, book_id, borrower_name)
 
     else:
         print("Choose a valid number")
